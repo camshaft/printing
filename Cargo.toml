@@ -1,0 +1,8 @@
+[workspace]
+members = ["can-attachment"
+]
+resolver = "2"
+
+[workspace.dependencies]
+#rsolid = { git = "https://github.com/camshaft/rsolid" }
+rsolid = { path = "../rsolid/rsolid" }
