@@ -1,5 +1,7 @@
 [workspace]
-members = ["can-attachment"
+members = [
+    "can-attachment",
+    "stick-up-cam-mk4",
 ]
 resolver = "2"
 

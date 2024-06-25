@@ -77,8 +77,8 @@ fn screw_support() -> Object {
 
 fn main() {
     let h = dish() + screw_support() - cutout() + bottom() - screw_holes() - screw_thing();
-    let h = h >> fragment_count(200).preview(20);
+    let out = h >> fragment_count(200).preview(50);
 
     std::fs::create_dir_all("target/rsolid").unwrap();
-    std::fs::write("target/rsolid/can-attachment.scad", h.to_string()).unwrap();
+    std::fs::write("target/rsolid/can-attachment.scad", out.to_string()).unwrap();
 }
