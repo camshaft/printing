@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "can-attachment",
+    "can-attachment", "clock-face",
     "stick-up-cam-mk4",
 ]
 resolver = "2"

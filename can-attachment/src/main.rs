@@ -79,6 +79,5 @@ fn main() {
     let h = dish() + screw_support() - cutout() + bottom() - screw_holes() - screw_thing();
     let out = h >> fragment_count(200).preview(50);
 
-    std::fs::create_dir_all("target/rsolid").unwrap();
-    std::fs::write("target/rsolid/can-attachment.scad", out.to_string()).unwrap();
+    rsolid::export!(out, &["3mf"]);
 }

@@ -109,11 +109,11 @@ fn clip() -> Object {
 }
 
 fn main() {
-    let mount = existing_mount_shape().bg() + mount_shape();
     let clip = clip() + bracket().bg();
-    let h = clip + (mount >> xrot(90) >> fwd(CLIP_W * 0.5 + MOUNT_D * 0.5 + 1.0));
+    let mount = existing_mount_shape().bg() + mount_shape();
+    let mount = mount >> xrot(90) >> fwd(CLIP_W * 0.5 + MOUNT_D * 0.5 + 1.0);
+    let h = clip + mount;
     let out = h >> fragment_count(200).preview(50);
 
-    std::fs::create_dir_all("target/rsolid").unwrap();
-    std::fs::write("target/rsolid/stick-up-cam-mk4.scad", out.to_string()).unwrap();
+    rsolid::export!(out, &["3mf"]);
 }
