@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "can-attachment", "clock-face",
-    "stick-up-cam-mk4",
+    "can-attachment", "clock-face", "clock-skeleton", "crayon-holder", "goggle-clip", "snowflake", "sonic-croc",
+    "stick-up-cam-mk4", "weather-station-display-mount",
 ]
 resolver = "2"
 

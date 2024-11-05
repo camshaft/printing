@@ -4,7 +4,7 @@ const INNER_R: f64 = 55.0;
 const OUTER_R: f64 = 90.0;
 const BOTTOM_CUTOUT_R: f64 = 7.68;
 
-fn dial() -> Object<2> {
+fn dial_shape() -> Object<2> {
     let tick_weight = 2.0;
     let out = 71.5;
 
@@ -33,8 +33,45 @@ fn dial() -> Object<2> {
     shape
 }
 
+fn screw(len: f64) -> Object {
+    bosl::metric_screws::screw()
+        .head_len(0)
+        .len(len)
+        .size(3.5)
+        .pitch(0.7)
+        .into()
+}
+
+fn dial() -> Object {
+    let h = 2.0;
+    let ring = circle(OUTER_R);
+    let shape = ring - dial_shape() - face_cutout();
+    let mut shape = shape >> linear_extrude(h) >> down(h);
+
+    let len = 6.0;
+    face_mounts(|shift| {
+        let screw = screw(len) >> translate(shift) >> up(len);
+        shape += screw;
+    });
+
+    shape >> down(1.0)
+}
+
 fn bottom_cutout(scale: f64) -> Object<2> {
     circle(BOTTOM_CUTOUT_R * scale) >> back(52.82)
+}
+
+fn face_mounts(mut f: impl FnMut([f64; 3])) {
+    let count = 8;
+    let hole_deg = 360.0 / count as f64;
+    for out in [61.0, 84.0] {
+        for i in 0..count {
+            let degrees = i as f64 * hole_deg + hole_deg * 0.5;
+            let x = degrees.to_radians().sin() * out;
+            let y = degrees.to_radians().cos() * out;
+            f([x, y, 0.0]);
+        }
+    }
 }
 
 fn face_cutout() -> Object<2> {
@@ -44,22 +81,28 @@ fn face_cutout() -> Object<2> {
     inner + cutout
 }
 
-fn face() -> Object {
+fn face_shape() -> Object<2> {
     let outer = circle(OUTER_R);
 
-    let shape = outer - face_cutout();
-    let dial = shape.clone() - dial();
+    let mut shape = outer - face_cutout();
 
-    let plate = shape >> linear_extrude(1);
-    let dial = dial >> linear_extrude(1) >> down(1);
+    let hole_r = 2.0;
+    face_mounts(|shift| {
+        let hole = circle(hole_r) >> translate(shift);
+        shape -= hole;
+    });
 
-    plate + dial
+    shape
+}
+
+fn face() -> Object {
+    face_shape() >> linear_extrude(1)
 }
 
 fn outer_rim() -> Object {
     let r = OUTER_R;
     let h = 5.0;
-    let t = 1.0;
+    let t = 2.0;
     let lip_h = 1.0;
     let outer = cylinder(h, 90).center(true);
     let lip = cone(lip_h, r, r + 1.0).center(true) >> up(h * 0.5 - lip_h * 0.5);
@@ -124,8 +167,19 @@ fn posts() -> Object {
 }
 
 fn main() {
-    let h = face() + outer_rim() + inner_rim() + center_rim() + posts();
-    let out = h >> fragment_count(200).preview(50);
+    let face = face();
+    let dial = dial();
+    let main = face.clone() + dial.clone() + outer_rim() + inner_rim() + center_rim() + posts();
 
-    rsolid::export!(out, &["amf"]);
+    let settings = fragment_count(150).preview(25);
+
+    let face = settings.apply(&face);
+    let dial = settings.apply(&dial);
+    let main = settings.apply(&main);
+
+    let targets = &["amf"];
+
+    rsolid::export!(main, targets);
+    rsolid::export!(face, "face", targets);
+    rsolid::export!(dial, "dial", targets);
 }
