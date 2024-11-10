@@ -45,6 +45,8 @@ impl Config {
             branch += branch.clone().rotate([0.0, 0.0, amount]);
         }
 
+        let mut branch = branch >> linear_extrude(HEIGHT) >> down(HEIGHT * 0.5);
+
         branch += magnet().scale([1.4, 1.4, 2.0]).down(MAGNET_HEIGHT);
 
         branch -= magnet();
@@ -52,9 +54,9 @@ impl Config {
         branch
     }
 
-    fn branch(&self, rng: &mut Rng, len: f64, depth: usize) -> Object {
+    fn branch(&self, rng: &mut Rng, len: f64, depth: usize) -> Object<2> {
         if depth == self.max_depth || len < 0.5 {
-            return cube(0).into();
+            return square(0).into();
         }
 
         let scale = self.depth_scale(depth);
@@ -86,10 +88,10 @@ fn magnet() -> Object {
         .up(MAGNET_HEIGHT * 0.5)
 }
 
-fn branch_shape(len: f64, width: f64) -> Object {
-    let mut b = cube([len, width, HEIGHT]).center(true).right(len * 0.5);
+fn branch_shape(len: f64, width: f64) -> Object<2> {
+    let mut b = square([len, width]).center(true).right(len * 0.5);
 
-    let full = circle(width * 0.5).right(len) >> linear_extrude(HEIGHT) >> down(HEIGHT * 0.5);
+    let full = circle(width * 0.5).right(len);
 
     b += full;
 
@@ -104,8 +106,7 @@ fn main() {
     for seed in large_seeds {
         snowflakes.push((
             "large",
-            0,
-            // seed,
+            seed,
             Config {
                 initial_branch_len: 60.0,
                 max_depth: 4,
@@ -115,12 +116,12 @@ fn main() {
             }
             .snowflake(seed),
         ));
-        break;
     }
 
     let small_seeds = [
-        110, 109, 108, 107, 106, 105, 104, 100, 28, 26, 25, 24, 21, 19, 18, 17, 14, 13, 12, 11, 10,
-        8, 7, 6, 4, 3, 2, 0,
+        1826, 1825, 1824, 1823, 1822, 1820, 1819, 1318, 1317, 1315, 1314, 1313, 1311, 1310, 1309,
+        1307, 1306, 1304, 1303, 1302, 1301, 110, 109, 108, 107, 106, 105, 104, 100, 28, 26, 25, 24,
+        21, 19, 18, 17, 14, 13, 12, 11, 10, 8, 7, 6, 4, 3, 2, 0,
     ];
 
     for seed in small_seeds {
@@ -134,7 +135,9 @@ fn main() {
     }
 
     let seeds = [
-        80, 79, 76, 75, 74, 73, 72, 71, 70, 69, 66, 65, 63, 61, 59, 57, 69, 919, 23, 15, 30,
+        1031, 1030, 1029, 1028, 1026, 1024, 1023, 1021, 1020, 1019, 1018, 1016, 1014, 1007, 1006,
+        1005, 1004, 1002, 1001, 80, 79, 76, 75, 74, 73, 72, 71, 70, 69, 66, 65, 63, 61, 59, 57, 69,
+        919, 23, 15, 30,
     ];
 
     for seed in seeds {
@@ -142,7 +145,7 @@ fn main() {
     }
 
     let targets = &["amf"];
-    let targets = &[];
+    // let targets = &[];
 
     let settings = fragment_count(50).preview(25);
 
