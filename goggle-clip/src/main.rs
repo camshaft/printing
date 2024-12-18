@@ -29,7 +29,7 @@ fn clip() -> Object {
         let bottom = &top >> mirror([0, 0, 1]);
 
         let right = mask::face::cube(CLIP_W + shift, depth * 2.0, mask::fillet(0.3))
-            >> xrot(-90)
+            >> rotate_x(-90)
             >> fwd(CLIP_W * 0.5 + 0.25 + shift);
 
         let left = &right >> mirror([0, 1, 0]);

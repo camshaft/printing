@@ -12,7 +12,7 @@ fn power_supply() -> Object {
     let mut s = cube([PS_W, PS_H, PS_D]).center(true).into_object();
 
     s += cylinder(PS_CABLE_H, PS_CABLE_R).center(true)
-        >> xrot(90)
+        >> rotate_x(90)
         >> fwd((PS_H + PS_CABLE_H) * 0.5)
         >> up(PS_D * 0.5 - PS_CABLE_OFFSET);
 
@@ -33,7 +33,7 @@ fn ps_mount() -> Object {
     c -= {
         let r = PS_D + t * 2.0;
 
-        cylinder(100, r).center(true) >> yrot(90) >> down(r * 0.5 + 5.0) >> fwd(0.475)
+        cylinder(100, r).center(true) >> rotate_y(90) >> down(r * 0.5 + 5.0) >> fwd(0.475)
     };
 
     c -= cube([PS_CABLE_D - 1.0, 100.0, 22.0]).center(true) >> down(7.5);

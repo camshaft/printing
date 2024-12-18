@@ -21,9 +21,9 @@ fn s_slot() -> Object<2> {
     let h = S_SLOT_H;
     let f = &mask::fillet(2.0);
     let mut mask = f >> fwd(h / 2.0) >> right(w / 2.0);
-    mask += f >> zrot(90) >> fwd(h / 2.0) >> left(w / 2.0);
-    mask += f >> zrot(180) >> back(h / 2.0) >> left(w / 2.0);
-    mask += f >> zrot(-90) >> back(h / 2.0) >> right(w / 2.0);
+    mask += f >> rotate_z(90) >> fwd(h / 2.0) >> left(w / 2.0);
+    mask += f >> rotate_z(180) >> back(h / 2.0) >> left(w / 2.0);
+    mask += f >> rotate_z(-90) >> back(h / 2.0) >> right(w / 2.0);
 
     square([w, h]).center(true) - mask
 }

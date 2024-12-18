@@ -1,10 +1,11 @@
 [workspace]
 members = [
-    "can-attachment", "clock-face", "clock-skeleton", "crayon-holder", "goggle-clip", "snowflake", "sonic-croc",
-    "stick-up-cam-mk4", "weather-station-display-mount",
+    "can-attachment", "clock-face", "clock-flipper", "clock-skeleton", "crayon-holder", "family-room", "gingerbread-tiles", "goggle-clip", "snowflake", "sonic-croc",
+    "stick-up-cam-mk4", "trophy", "vase", "weather-station-display-mount",
 ]
 resolver = "2"
 
 [workspace.dependencies]
-rsolid = { git = "https://github.com/camshaft/rsolid" }
-#rsolid = { path = "../rsolid/rsolid" }
+rayon = "1"
+# rsolid = { git = "https://github.com/camshaft/rsolid" }
+rsolid = { path = "../rsolid/rsolid" }

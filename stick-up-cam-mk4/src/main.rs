@@ -103,7 +103,7 @@ fn clip() -> Object {
 
     shape
         >> linear_extrude(BASE_OR * 2.0 + CLIP_THICKNESS).center(true)
-        >> yrot(-90)
+        >> rotate_y(-90)
         >> mirror([0, 1, 0])
         >> fwd(CLIP_W * 0.5)
 }
@@ -111,7 +111,7 @@ fn clip() -> Object {
 fn main() {
     let clip = clip() + bracket().bg();
     let mount = existing_mount_shape().bg() + mount_shape();
-    let mount = mount >> xrot(90) >> fwd(CLIP_W * 0.5 + MOUNT_D * 0.5 + 1.0);
+    let mount = mount >> rotate_y(90) >> fwd(CLIP_W * 0.5 + MOUNT_D * 0.5 + 1.0);
     let h = clip + mount;
     let out = h >> fragment_count(200).preview(50);
 
