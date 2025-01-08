@@ -38,66 +38,37 @@ fn pane() -> Object {
 }
 
 fn tile_square() -> Object {
-    let base = cube([TILE_W, TILE_W, TILE_D]).center(true).into_object();
-
-    let mut cavities = magnet_cavity() >> back(MAGNET_PLACEMENT);
-    cavities += magnet_cavity() >> fwd(MAGNET_PLACEMENT);
-    cavities += magnet_cavity() >> rotate([0.0, 0.0, 90.0]) >> right(MAGNET_PLACEMENT);
-    cavities += magnet_cavity() >> rotate([0.0, 0.0, 90.0]) >> left(MAGNET_PLACEMENT);
-
-    base - cavities
+    tile_square_cavities([true; 4])
 }
 
-fn tile_square_ornate() -> Object {
-    let chunkiness = 2.5;
-    let inset = 3.0;
+fn tile_square_cavities(cavities: [bool; 4]) -> Object {
+    let base = cube([TILE_W, TILE_W, TILE_D]).center(true).into_object();
 
-    let accent = {
-        let w = TILE_W * 0.5 - chunkiness - 5.0;
-        let line = cube([w, 0.1, 0.1]);
-        let line = line.minkowski(sphere(chunkiness));
+    let mut out = empty().into_object();
 
-        let mut out = line.clone();
+    if cavities[0] {
+        out += magnet_cavity() >> fwd(MAGNET_PLACEMENT);
+    }
+    if cavities[1] {
+        out += magnet_cavity() >> rotate([0.0, 0.0, 90.0]) >> right(MAGNET_PLACEMENT);
+    }
+    if cavities[2] {
+        out += magnet_cavity() >> back(MAGNET_PLACEMENT);
+    }
+    if cavities[3] {
+        out += magnet_cavity() >> rotate([0.0, 0.0, 90.0]) >> left(MAGNET_PLACEMENT);
+    }
 
-        out += &line >> rotate([0, 0, -90]);
-        out += &line >> rotate([0, 0, -45]);
+    base - out
+}
 
-        out
-    };
+fn tile_square_loop() -> Object {
+    let decorations = svg!("loop.svg") >> linear_extrude(0.1);
+    let decorations =
+        decorations.minkowski(sphere(0.7)) >> left(TILE_W * 0.5) >> back(TILE_W * 0.5);
 
-    let corner = {
-        let w = TILE_W - inset * 3.0 - chunkiness;
-        let line = cube([w, 0.1, 0.1]);
-        let line = line.minkowski(sphere(chunkiness));
-
-        let shift = w * 0.5 + inset;
-
-        let mut out = &line >> back(shift) >> left(shift - inset * 2.0);
-
-        out += &line >> rotate([0, 0, 90]) >> right(shift) >> back(shift);
-
-        out
-    };
-
-    let offset = TILE_W * 0.5 - inset - chunkiness;
-
-    let candy = {
-        let size = chunkiness * 1.6;
-        let mount =
-            sphere(size + 0.5) >> scale([1.0, 1.0, 0.7]) >> up(0.25) >> right(0.25) >> back(0.25);
-
-        let candy = sphere(size * 0.7) >> scale([1.0, 1.0, 0.5]) >> up(2.7);
-
-        let out = mount + candy;
-
-        out >> right(size * 0.5 - 1.0) >> back(size * 0.5 - 1.0)
-    };
-
-    let mut decorations = accent >> left(offset) >> fwd(offset);
-    decorations += corner >> left(inset) >> fwd(inset);
-    decorations += candy >> left(offset) >> fwd(offset);
-
-    decorations &= cube([TILE_W, TILE_W, TILE_D]).center(true) >> up(TILE_D * 0.5);
+    let decorations =
+        decorations & (cube([TILE_W, TILE_W, TILE_D]).center(true) >> up(TILE_D * 0.5));
 
     tile_square() + (decorations >> up(TILE_D * 0.5))
 }
@@ -138,7 +109,7 @@ fn tile_window() -> Object {
         outline -= cutouts;
 
         let trim = outline >> linear_extrude(0.1);
-        trim.minkowski(sphere(0.75)) >> dbg()
+        trim.minkowski(sphere(0.75))
     };
 
     base -= cutouts;
@@ -153,7 +124,7 @@ fn tile_door() -> Object {
     let decoration_w = TILE_W - inset;
 
     let upper = {
-        let mut upper = tile_square();
+        let mut upper = tile_square_cavities([true, true, false, true]);
         let arch_r = TILE_W * 0.75;
         let arch_c = circle(arch_r);
         let arch_offset = TILE_W * 0.4;
@@ -188,7 +159,7 @@ fn tile_door() -> Object {
     };
 
     let lower = {
-        let mut lower = tile_square();
+        let mut lower = tile_square_cavities([false, true, true, true]);
 
         let mut design = square(decoration_w).center(true).into_object();
 
@@ -210,7 +181,15 @@ fn tile_door() -> Object {
         lower
     };
 
-    (upper >> fwd(TILE_W * 0.5)) + (lower >> back(TILE_W * 0.5))
+    let door = (upper >> fwd(TILE_W * 0.5)) + (lower >> back(TILE_W * 0.5));
+
+    let mut decoration_cavities = empty().into_object();
+
+    decoration_cavities += magnet_cavity() >> rotate_z(90.0) >> right(MAGNET_PLACEMENT);
+    decoration_cavities += magnet_cavity() >> rotate_z(90.0) >> left(MAGNET_PLACEMENT);
+    decoration_cavities += magnet_cavity() >> rotate_z(90.0) >> fwd(MAGNET_PLACEMENT + MAGNET_W);
+
+    door - decoration_cavities
 }
 
 fn tile_decoration_mask() -> Object {
@@ -252,34 +231,61 @@ fn tile_roof() -> Object {
 fn tile_icicle() -> Object {
     let mut tile = tile_square();
 
-    let icicles = {
-        let chunkiness = 0.75;
-
-        let icicles = svg!("icicle.svg")
-            >> linear_extrude(0.00001)
-            >> left(TILE_W * 0.5)
-            >> back(TILE_W * 0.5 + chunkiness);
-        let icicles = icicles.minkowski(sphere(chunkiness));
-
-        icicles & tile_decoration_mask()
-    };
-
-    tile += icicles >> up(TILE_D * 0.5);
+    tile += icicles(svg!("icicle.svg"));
 
     tile
 }
 
+fn tile_window_icicle() -> Object {
+    let mut tile = tile_window();
+
+    tile += icicles(svg!("icicle-window.svg"));
+
+    tile
+}
+
+fn tile_chimney() -> Object {
+    let mut tile = tile_square_cavities([true, true, false, true]);
+
+    tile += icicles(svg!("icicle.svg"));
+
+    let [w, h, _angle] = roof_dims(2.0, 3.0);
+    let gable = polygon([[0.0, 0.0], [w * 0.5, h], [w, 0.0]])
+        >> linear_extrude(10)
+        >> down(5)
+        >> left(w * 0.5)
+        >> back(h + 2.5);
+
+    tile -= gable;
+
+    tile += cube([TILE_D, TILE_D, TILE_D]).center(true);
+
+    tile
+}
+
+fn icicles(img: Object<2>) -> Object {
+    let chunkiness = 0.8;
+
+    let icicles =
+        img >> linear_extrude(0.2) >> left(TILE_W * 0.5) >> back(TILE_W * 0.5 + chunkiness);
+    let icicles = icicles.minkowski(sphere(chunkiness));
+
+    let icicles = icicles & tile_decoration_mask();
+
+    icicles >> up(TILE_D * 0.5)
+}
+
 fn wreath() -> Object {
-    let radius = TILE_W * 0.5 - 10.0;
-    let thickness = 5.4;
+    let radius = TILE_W * 0.5 - 8.0;
+    let thickness = 4.4;
     let ring = circle(thickness) >> right(radius);
-    let ring = ring >> rotate_extrude();
+    let ring = ring >> rotate_extrude() >> up(1.0);
 
-    let mut wreath = ring & (cube(500).center(true) >> up(250));
+    let wreath = ring & (cube(500).center(true) >> up(250));
 
-    wreath -= cylinder(2.5, 6.0 * 0.5 + 1.0) >> fwd(radius) >> up(1.0) >> dbg();
+    let cavity = c_magnet_cavity() >> up(1.5) >> fwd(radius);
 
-    wreath
+    wreath - cavity
 }
 
 fn gumdrop() -> Object {
@@ -292,21 +298,23 @@ fn gumdrop() -> Object {
 }
 
 fn snowman_ball(size: f64) -> Object {
-    let mut ball = sphere(size * 0.5).into_object();
+    let height = size * 0.75;
 
-    let height = size - 2.0;
+    let base = cylinder(height, size * 0.5 - 1.0)
+        .center(true)
+        .into_object();
+    let base = base.minkowski(sphere(2.0));
 
-    ball &= cube([size, size, size - 3.0]).center(true);
+    let mut cavities = empty().into_object();
+    cavities += c_magnet_cavity() >> up((height * 0.5) - 1.0);
+    cavities += c_magnet_cavity() >> down((height * 0.5) - 1.0);
 
-    ball -= c_magnet_cavity() >> up((height * 0.5) - 3.0);
-    ball -= c_magnet_cavity() >> down((height * 0.5) - 3.0);
-
-    ball
+    base - cavities
 }
 
 fn snowman_hat() -> Object {
-    let brim = cylinder(1.0, 7.0).center(true);
-    let b_h = 8.0;
+    let brim = cylinder(1.0, 8.0).center(true);
+    let b_h = 9.0;
     let bucket = cylinder(b_h, 5.0).center(true);
     let bucket = bucket >> up(b_h * 0.5);
 
@@ -441,36 +449,142 @@ fn peppermint_swirl() -> Object {
     (peppermint_base() & peppermint_swirl_pattern()) >> scale([0.99, 0.99, 1.0])
 }
 
+fn filler(chunkiness: f64, has_back: bool) -> Object {
+    let spill = 0.2;
+
+    let mut base = square([TILE_D + spill * 2.0, spill])
+        .center(true)
+        .into_object();
+
+    let mut lip = circle(chunkiness * 0.5).into_object();
+    lip &= square([chunkiness, chunkiness]) >> back(chunkiness * 0.5);
+    let lip = lip >> right(TILE_D * 0.5 + spill) >> fwd(chunkiness * 0.5 - spill * 0.5);
+
+    base += &lip;
+
+    let mut base = base >> linear_extrude(TILE_W);
+
+    if has_back {
+        base += cube([spill * 3.0, chunkiness, TILE_W - TILE_D * 2.0])
+            >> up(TILE_D)
+            >> left(TILE_D * 0.5 + spill * 4.0)
+            >> back(spill * 0.5);
+    }
+
+    base >> rotate_x(90)
+}
+
+fn tree_section(radius: f64, include_decoration: bool, n: u32) -> Object {
+    let l = radius;
+    let w = radius * 0.8;
+    let h = 3.0;
+
+    let pattern = |h: f64, w: f64| {
+        let path = Path::default()
+            .catmull_rom_to([w * -0.5, 0.0], 0.7)
+            .catmull_rom_to([0.0, h], 0.7)
+            .catmull_rom_to([w * 0.5, 0.0], 0.7)
+            .catmull_rom_to(0, 0.7)
+            .into_object();
+
+        let mut out = empty().into_object();
+
+        for i in 0..5 {
+            let angle = i as f64 / 5.0 * 360.0;
+            out += &path >> rotate_z(angle);
+        }
+
+        out
+    };
+
+    let star = pattern(l, w) >> linear_extrude(0.1);
+    let star = star.minkowski(sphere(3.0));
+
+    let frosting = pattern(l * 0.93, w * 0.87) >> linear_extrude(1.0);
+    let frosting = frosting.minkowski(sphere(1.0)) >> up(2.1);
+
+    let mut cavities = c_magnet_cavity() >> up(h * 0.5 + 0.5);
+    cavities += c_magnet_cavity() >> down(h * 0.5 - 0.3);
+
+    let decoration = {
+        let mut out = empty().into_object();
+        let leaf = sphere(3.0) >> fwd(radius * 0.7);
+
+        for i in 0..5 {
+            let angle = i as f64 / 5.0 * 360.0;
+            out += &leaf >> rotate_z(angle);
+        }
+
+        out >> up(2.5)
+    };
+
+    let mut out = star + frosting;
+
+    if include_decoration {
+        out += decoration;
+    }
+
+    let label = text(format!("{n}"))
+        .font("Baloo 2")
+        .halign("center")
+        .valign("center")
+        >> mirror_x()
+        >> linear_extrude(0.2)
+        >> down(h);
+
+    let out = out - label;
+
+    out - cavities
+}
+
 fn main() {
     let settings = fragment_count(50).preview(25);
 
     let targets = &["stl"];
     // let targets = &[];
 
-    [
+    let mut out = [
         (tile_square(), "tile_square"),
-        (tile_square_ornate(), "tile_square_ornate"),
+        (tile_square_loop(), "tile_square_loop"),
         (tile_triangle(1.0, 1.0), "tile_triangle"),
         (tile_window(), "tile_window"),
+        (tile_window_icicle(), "tile_window_icicle"),
+        (tile_chimney(), "tile_chimney"),
         (tile_door(), "tile_door"),
         (tile_roof(), "tile_roof"),
         (tile_icicle(), "tile_icicle"),
-        (tile_triangle(3.0, 3.0), "tile_roof_triangle"),
-        (tile_triangle(2.0, 3.0), "tile_roof_triangle_shallow"),
+        (tile_triangle(3.0, 3.0), "tile_gable"),
+        (tile_triangle(2.0, 3.0), "tile_gable_shallow"),
         (roof_fascia(2.0, 3.0), "roof_fascia"),
         (roof_ridge(2.0, 3.0, true), "roof_ridge"),
         (pane(), "pane"),
         (wreath(), "wreath"),
         (gumdrop(), "gumdrop"),
-        (snowman_ball(15.0), "snowman_large"),
-        (snowman_ball(13.5), "snowman_medium"),
-        (snowman_ball(11.0), "snowman_small"),
+        (snowman_ball(16.0), "snowman_large"),
+        (snowman_ball(12.0), "snowman_medium"),
+        (snowman_ball(8.0), "snowman_small"),
         (snowman_hat(), "snowman_hat"),
         (peppermint(), "peppermint"),
         (peppermint_swirl(), "peppermint_swirl"),
+        (filler(2.15, true), "filler"),
+        (filler(TILE_D + 0.2, false), "filler_large"),
     ]
-    .par_iter()
-    .for_each(|(object, name)| {
+    .into_iter()
+    .map(|(v, name)| (v, name.to_string()))
+    .collect::<Vec<_>>();
+
+    let tree_sections = 13;
+    for i in 0..tree_sections {
+        let n = i + 1;
+        let scale = 2.0;
+        let radius = 35.0 - (i as f64 * scale);
+        out.push((
+            tree_section(radius, n < tree_sections, n),
+            format!("tree_section_{n}"),
+        ));
+    }
+
+    out.par_iter().for_each(|(object, name)| {
         let start = std::time::Instant::now();
         let v = settings.apply(object);
         rsolid::export!(v, name, targets);
